@@ -1,8 +1,8 @@
 name: d1-migrate (reusable)
 
-# Reusable workflow: apply Cloudflare D1 migrations.
-# Idempotent — runs every SQL file in `migrations-glob` against `database`.
-# All ALTER/CREATE statements should be `IF NOT EXISTS` or otherwise safe to re-run.
+# Reusable workflow: apply Cloudflare D1 migrations idempotently.
+# Uses `wrangler d1 migrations apply` which tracks applied files in the
+# d1_migrations table — re-running is safe.
 # Cloudflare credentials sourced from Doppler at call time.
 
 on:
@@ -11,9 +11,9 @@ on:
       database:
         type: string
         required: true
-      migrations-glob:
+      migrations-dir:
         type: string
-        default: "migrations/*.sql"
+        default: "migrations"     # default per wrangler convention
       node-version:
         type: string
         default: "20"
@@ -52,17 +52,15 @@ jobs:
             bun)  curl -fsSL https://bun.sh/install | bash && ~/.bun/bin/bun install --frozen-lockfile ;;
           esac
 
-      - name: Apply migrations (idempotent)
+      - name: Apply D1 migrations (idempotent)
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
-          shopt -s nullglob
-          files=( ${{ inputs.migrations-glob }} )
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No migration files matched ${{ inputs.migrations-glob }} — skipping."
+          if [ ! -d "${{ inputs.migrations-dir }}" ]; then
+            echo "No migrations dir at ${{ inputs.migrations-dir }} — skipping."
             exit 0
           fi
-          for f in "${files[@]}"; do
-            echo "→ applying $f"
-            doppler run -- npx wrangler d1 execute ${{ inputs.database }} --remote --file="$f"
-          done
+          # `wrangler d1 migrations apply` discovers files in the configured
+          # migrations dir (default ./migrations). It tracks applied files in
+          # the d1_migrations table, so re-runs are no-ops.
+          doppler run -- npx wrangler d1 migrations apply ${{ inputs.database }} --remote
