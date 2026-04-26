@@ -1,0 +1,34 @@
+name: stale-state-sweep
+
+# Weekly: nudge stale issues/PRs so the board reflects reality.
+# Aggressive enough to keep the queue honest, gentle enough not to lose context.
+
+on:
+  schedule:
+    - cron: "0 14 * * 1"   # Mondays 2pm UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-issue-stale: 60
+          days-before-issue-close: 14
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          stale-issue-message: |
+            This issue has been quiet for 60 days. If it still matches reality, drop a comment to keep it open. Otherwise it auto-closes in 14 days.
+          stale-pr-message: |
+            This PR has been quiet for 30 days. Push or comment to keep it open. Closes in 7 days otherwise.
+          close-issue-message: "Auto-closed due to inactivity. Reopen if still relevant."
+          close-pr-message: "Auto-closed due to inactivity."
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-issue-labels: "pinned,roadmap,security"
+          exempt-pr-labels: "pinned,wip"

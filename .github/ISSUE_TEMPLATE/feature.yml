@@ -1,0 +1,44 @@
+name: Feature
+description: Propose a new feature, capability, or behavior change.
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > Issues should reflect the state of the code. When you finish work, the closing PR should `Closes #N` so this issue updates automatically.
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: Concise description of the feature or behavior.
+      placeholder: One subject. One phrase. Stake the letters you're sure about.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Problem this solves or opportunity it captures. Tie back to the project PRD if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How (sketch)
+      description: Rough implementation sketch — files to touch, abstractions to use, BaseNative packages to leverage.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - small (under a day)
+        - medium (1–3 days)
+        - large (multi-PR)
+    validations:
+      required: true
+  - type: input
+    id: prd
+    attributes:
+      label: PRD section
+      description: "Which section of docs/PRD.md does this implement? e.g. M2.3"

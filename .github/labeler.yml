@@ -1,0 +1,52 @@
+# Path-based PR labels. actions/labeler v5 syntax.
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**"
+          - "**/components/**"
+          - "**/*.jsx"
+          - "**/*.tsx"
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "functions/**"
+          - "packages/server/**"
+          - "packages/middleware/**"
+
+infra:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+          - "wrangler.toml"
+          - "wrangler.jsonc"
+          - "Dockerfile"
+          - "*.tf"
+          - "infra/**"
+
+db:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "migrations/**"
+          - "schema.sql"
+          - "**/*.sql"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+
+deps:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "package.json"
+          - "package-lock.json"
+          - "pnpm-lock.yaml"
+          - "yarn.lock"
+
+basenative:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/**"

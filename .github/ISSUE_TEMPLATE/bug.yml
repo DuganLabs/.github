@@ -1,0 +1,31 @@
+name: Bug
+description: Something is broken or behaves wrong.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What's broken
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduce
+      description: Steps, URL, expected vs actual.
+      placeholder: |
+        1. Go to /play
+        2. Tap MOVIE QUOTES
+        3. Expected: round starts. Actual: 500.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: iOS Safari 18.x · production
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
