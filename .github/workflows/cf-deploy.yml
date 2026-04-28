@@ -38,6 +38,12 @@ on:
     secrets:
       DOPPLER_TOKEN:
         required: true
+      NPM_TOKEN:
+        required: false
+        description: |
+          Optional. PAT or fine-grained token with `read:packages` scope, used
+          to install scoped packages from GitHub Packages (e.g. `@basenative/*`).
+          When provided, an auth line is appended to ~/.npmrc before install.
 
 jobs:
   deploy:
@@ -48,6 +54,7 @@ jobs:
     permissions:
       contents: read
       deployments: write
+      packages: read
     steps:
       - uses: actions/checkout@v6
 
@@ -62,6 +69,14 @@ jobs:
 
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
+
+      - name: Auth to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "${NODE_AUTH_TOKEN}" ]; then
+            echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          fi
 
       - name: Install dependencies
         run: |
