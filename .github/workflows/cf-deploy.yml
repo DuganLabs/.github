@@ -68,7 +68,7 @@ jobs:
           cache: ${{ inputs.package-manager }}
 
       - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+        uses: dopplerhq/cli-action@v4
 
       - name: Auth to GitHub Packages
         env:
