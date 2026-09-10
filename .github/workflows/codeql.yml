@@ -1,6 +1,6 @@
 name: codeql
 
-# CodeQL security scanning. Lightweight: javascript/typescript, weekly + on PR.
+# CodeQL security scanning. This repo contains only GitHub Actions workflows, so scan the "actions" language. Weekly + on PR.
 on:
   push:
     branches: [main]
@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [javascript-typescript]
+        language: [actions]
     steps:
       - uses: actions/checkout@v6
       - uses: github/codeql-action/init@v4
