@@ -5,6 +5,10 @@ name: bundle-size (reusable)
 
 on:
   workflow_call:
+    secrets:
+      NPM_TOKEN:
+        description: Token for GitHub Packages (@basenative/*). Falls back to github.token.
+        required: false
     inputs:
       build-command:
         type: string
@@ -33,6 +37,10 @@ permissions:
 jobs:
   size:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
 
@@ -42,10 +50,14 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
+          registry-url: https://npm.pkg.github.com
+          scope: "@basenative"
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.package-manager }}
 
       - name: Install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || github.token }}
         run: |
           case "${{ inputs.package-manager }}" in
             pnpm) pnpm install --frozen-lockfile ;;
