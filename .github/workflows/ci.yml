@@ -32,6 +32,9 @@ on:
         type: boolean
         default: true
     secrets:
+      NPM_TOKEN:
+        description: Token for GitHub Packages (@basenative/*). Falls back to github.token.
+        required: false
       DOPPLER_TOKEN:
         required: false   # only required if test/lint commands need secrets
 
