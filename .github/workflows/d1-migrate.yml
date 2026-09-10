@@ -33,6 +33,12 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    env:
+      # Exported for the whole job so a consumer's project .npmrc line
+      # `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` resolves during
+      # install/build/deploy (a project .npmrc shadows the user-level one written
+      # below; with the variable unset npm sends an empty token and gets a 401).
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     permissions:
       contents: read
       packages: read
