@@ -41,6 +41,15 @@ on:
       package-manager:
         type: string
         default: "pnpm"        # pnpm | npm | bun
+      pnpm-version:
+        type: string
+        default: ""
+        description: >
+          pnpm version for pnpm/action-setup. Leave empty to let the action read
+          `packageManager` from the caller's package.json, which is the better
+          place to pin it. Set this only for a repo that cannot declare one —
+          without either, the action fails outright with "No pnpm version is
+          specified".
       environment:
         type: string
         default: "production"
@@ -88,9 +97,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # pnpm/action-setup needs a version from somewhere: this input, or a
+      # `packageManager` field in the caller's package.json. With neither it
+      # fails the job at setup, before anything is built — which is how
+      # duganlabs.com silently stopped deploying after adopting this workflow.
       - name: Setup pnpm
         if: inputs.package-manager == 'pnpm'
         uses: pnpm/action-setup@v4
+        with:
+          version: ${{ inputs.pnpm-version }}
 
       - uses: actions/setup-node@v6
         with:
