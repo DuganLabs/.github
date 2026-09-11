@@ -16,13 +16,31 @@ jobs:
       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 ```
 
+or, for a project not yet migrated onto Doppler:
+
+```yaml
+jobs:
+  deploy:
+    uses: DuganLabs/.github/.github/workflows/cf-worker-deploy.yml@v1
+    with:
+      deploy-command: "pnpm exec wrangler deploy"
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+```
+
 | Workflow | Purpose |
 |---|---|
 | `ci.yml` | lint + typecheck + test |
-| `cf-deploy.yml` | Cloudflare Pages deploy via Doppler |
+| `cf-deploy.yml` | Cloudflare Pages deploy |
+| `cf-worker-deploy.yml` | single Cloudflare Worker deploy |
 | `d1-migrate.yml` | idempotent D1 schema apply |
 
-**Boundary rule:** these workflows never embed any project-specific value. Cloudflare credentials are passed at call time via Doppler service tokens.
+**Boundary rule:** these workflows never embed any project-specific value.
+Cloudflare credentials are passed at call time — via a Doppler service token
+(preferred) or direct GitHub Actions secrets (fallback, for a project not
+yet on Doppler). See `../../DOPPLER.md` for the naming convention and which
+secret wins when both are present.
 
 ## Org-wide automation (run in this repo)
 
