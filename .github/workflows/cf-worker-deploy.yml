@@ -1,40 +1,40 @@
-name: cf-deploy (reusable)
+name: cf-worker-deploy (reusable)
 
-# Reusable workflow: Cloudflare Pages deploy.
+# Reusable workflow: deploy a single Cloudflare Worker (not Pages — see
+# cf-deploy.yml for that). For a project whose deploy is "install, optionally
+# build, then run one wrangler command in one directory" — DuganLabs' and
+# warrendugan's worker deploys are exactly this shape.
 #
-# Cloudflare credentials come from ONE of two places, and every caller uses
-# the exact same steps below regardless of which:
-#   - Doppler (preferred): pass secrets.DOPPLER_TOKEN — a read-only Doppler
-#     service token scoped to the calling project's config. The workflow
-#     wraps its build/deploy commands in `doppler run --`, which injects
-#     CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID (and anything else in that
-#     Doppler config) into the command's environment.
-#   - Direct GitHub Actions secrets (fallback, while a project hasn't been
-#     migrated into Doppler yet): pass secrets.CLOUDFLARE_API_TOKEN and
-#     secrets.CLOUDFLARE_ACCOUNT_ID directly.
+# A deploy with more moving parts than that (multiple Workers, DNS wiring,
+# hand-rolled D1 migrations, extra Worker secrets to push) is not a good fit
+# — keep it as a bespoke per-repo job rather than contorting it to fit here.
+# GreenPut and PendingBusiness are both in that category today.
 #
-# See dotgithub's DOPPLER.md for the project/config naming convention and
-# which secrets belong in Doppler.
-#
-# The workflow itself still knows nothing of any project's actual account id
-# or API token value — only which of the two sourcing paths to take, decided
-# at run time by whether DOPPLER_TOKEN is non-empty.
+# Same Doppler-or-direct credential convention as cf-deploy.yml and
+# d1-migrate.yml: pass secrets.DOPPLER_TOKEN (preferred) or
+# secrets.CLOUDFLARE_API_TOKEN + secrets.CLOUDFLARE_ACCOUNT_ID (fallback).
+# See dotgithub's DOPPLER.md for the naming convention.
 
 on:
   workflow_call:
     inputs:
-      project-name:
+      working-directory:
+        type: string
+        default: "worker"
+      deploy-command:
         type: string
         required: true
+        description: |
+          Full command to run, e.g. "pnpm exec wrangler deploy" or
+          "npx wrangler deploy". Run from working-directory, with Cloudflare
+          credentials in its environment (see the secrets block below).
       build-command:
         type: string
-        default: "build"
-      build-output-dir:
-        type: string
-        default: "dist"
-      branch:
-        type: string
-        default: "main"
+        default: ""
+        description: |
+          Optional. Run once, from the repo root, before install-time
+          checks and the deploy command — e.g. building a frontend the
+          Worker serves as assets. Skipped when empty.
       node-version:
         type: string
         default: "20"
@@ -58,9 +58,7 @@ on:
           also provided.
       CLOUDFLARE_API_TOKEN:
         required: false
-        description: |
-          Fallback, used only when DOPPLER_TOKEN is not set. Pages:Edit +
-          (optionally) D1:Edit scope.
+        description: Fallback, used only when DOPPLER_TOKEN is not set.
       CLOUDFLARE_ACCOUNT_ID:
         required: false
         description: Fallback, used only when DOPPLER_TOKEN is not set.
@@ -78,10 +76,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # Exported for the whole job so a consumer's project .npmrc line
-      # `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` resolves during
-      # install/build/deploy (a project .npmrc shadows the user-level one written
-      # below; with the variable unset npm sends an empty token and gets a 401).
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
     environment:
@@ -123,29 +117,18 @@ jobs:
           esac
 
       - name: Build
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -n "${DOPPLER_TOKEN}" ]; then
-            doppler run -- ${{ inputs.package-manager }} run ${{ inputs.build-command }}
-          else
-            ${{ inputs.package-manager }} run ${{ inputs.build-command }}
-          fi
+        if: inputs.build-command != ''
+        run: ${{ inputs.build-command }}
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy Worker
+        working-directory: ${{ inputs.working-directory }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          DEPLOY_CMD="npx wrangler pages deploy ${{ inputs.build-output-dir }} \
-            --project-name=${{ inputs.project-name }} \
-            --branch=${{ inputs.branch }} \
-            --commit-dirty=true"
           if [ -n "${DOPPLER_TOKEN}" ]; then
-            doppler run -- bash -c "${DEPLOY_CMD}"
+            doppler run -- bash -c "${{ inputs.deploy-command }}"
           else
-            bash -c "${DEPLOY_CMD}"
+            bash -c "${{ inputs.deploy-command }}"
           fi
