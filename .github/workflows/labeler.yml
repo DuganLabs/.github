@@ -1,8 +1,12 @@
+# MANUAL-ONLY. Every workflow in this org runs on workflow_dispatch and
+# nothing else: no push, no pull_request, no schedule. The owner runs it
+# from the Actions tab when he wants GitHub minutes spent; everything it
+# does also runs on a developer machine via scripts/pipeline.sh (checks)
+# and the deploy scripts, from the same Doppler config. (2026-09-14)
 name: pr-labeler
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read
