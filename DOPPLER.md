@@ -80,7 +80,7 @@ and (optionally, once confirmed working) `gh secret delete CLOUDFLARE_API_TOKEN`
 | t4bs | yes | Only repo fully on Doppler today. |
 | BaseNative | no | Fallback (direct CF secrets) via `cf-deploy.yml`. |
 | warrendugan | no | Fallback via `cf-worker-deploy.yml`. |
-| GreenPut | no | Bespoke pipeline (multi-worker + DNS); fallback pattern applied to its existing steps directly rather than migrated onto a reusable workflow — see its own CI file. |
+| GreenPut | yes (2026-09-13) | Bespoke pipeline (multi-worker + DNS). `DOPPLER_TOKEN` is a read-only service token scoped to `greenput/repository` (single root config — free tier). The Worker-secrets step runs under `doppler run --`, preferring Doppler and falling back to same-named GitHub secrets; `CLOUDFLARE_*` still read GitHub until that has run clean. `scripts/deploy/local.sh` runs the same deploy from a laptop under the same config. See GreenPut#153. |
 | DuganLabs | no | Fallback via `cf-worker-deploy.yml`. |
 | PendingBusiness | no | Bespoke pipeline (D1 bootstrap + multi-step); fallback pattern applied to its existing steps directly. |
 
